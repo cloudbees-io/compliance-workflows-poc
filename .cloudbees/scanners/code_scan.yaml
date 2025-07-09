@@ -1,0 +1,132 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+name:  scan
+
+jobs:
+  scan:
+    steps:
+      - name: Initiate execution plan
+        uses: cloudbees-io/asset-chain-utils/start-chain@v1
+        id: plan
+
+      - name: Github Inventory
+        if: ${{ steps.plan.outputs.github-inventory == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-github-inventory:0c61e45e18b4155246f1e0b1c6bf7275d96c3da9
+        env:
+          ACCOUNT_CREDENTIALS: ${{ steps.plan.outputs.account_credentials}}
+        run: /app/plugin-git-master -mode single
+
+      - name: Github Metadata
+        if: ${{ steps.plan.outputs.github-decorator == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-github-metadata:c725c4df53250b0833d1e2a0033e3274f290dfd7
+        env:
+          ACCOUNT_CREDENTIALS: ${{ steps.plan.outputs.account_credentials}}
+        run: /app/plugin-git-decorator -mode single
+
+      - name: Bitbucket Inventory
+        if: ${{ steps.plan.outputs.bitbucket-inventory == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-bitbucket-server:417669b0fce4fe4fdd3ff80777667a43e2506cca
+        env:
+          ACCOUNT_CREDENTIALS: ${{ steps.plan.outputs.account_credentials}}
+          EXECUTION_ROLE: "MASTER"
+        run: /app/plugin-bitbucket -mode single
+
+      - name: Bitbucket Metadata
+        if: ${{ steps.plan.outputs.bitbucket-decorator == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-bitbucket-server:417669b0fce4fe4fdd3ff80777667a43e2506cca
+        env:
+          ACCOUNT_CREDENTIALS: ${{ steps.plan.outputs.account_credentials}}
+          EXECUTION_ROLE: "DECORATOR"
+        run: /app/plugin-bitbucket -mode single
+
+      - name: Gerrit Inventory
+        if: ${{ steps.plan.outputs.gerrit-inventory == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gerrit:b03bc1625164b9d66c7d2f17659149867b20ccd2
+        env:
+          ACCOUNT_CREDENTIALS: ${{ steps.plan.outputs.account_credentials}}
+          EXECUTION_ROLE: "MASTER"
+        run: /app/plugin-gerrit -mode single
+
+      - name: Gerrit Metadata
+        if: ${{ steps.plan.outputs.gerrit-decorator == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gerrit:b03bc1625164b9d66c7d2f17659149867b20ccd2
+        env:
+          ACCOUNT_CREDENTIALS: ${{ steps.plan.outputs.account_credentials}}
+          EXECUTION_ROLE: "DECORATOR"
+        run: /app/plugin-gerrit -mode single
+
+      - name: SCC Scanner
+        if: ${{ steps.plan.outputs.scc == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-scc-scanner:1a81610bbb3d6e6f2c4586f21d85638e56718a70
+        env:
+          RUN_ID: ${{ cloudbees.run_id }}
+          JOB_ID: ${{ job.id }}
+          STEP_ID: ${{ step.internal.id }}
+        continue-on-error: true
+        run: /app/plugin-scc-scanner -mode single
+
+      - name: GoSec Scanner
+        if: ${{ steps.plan.outputs.gosec == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gosec-scanner:1b2c0980e5495cc0132a3e693ba8e6ebf2c7cd71
+        env:
+          RUN_ID: ${{ cloudbees.run_id }}
+          JOB_ID: ${{ job.id }}
+          STEP_ID: ${{ step.internal.id }}
+        continue-on-error: true
+        run: /app/plugin-gosec-scanner -mode single
+
+      - name: Njs Scanner
+        if: ${{ steps.plan.outputs.njsscan == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-njsscan-scanner:6729338d9bada7a0ccc39dfe85f72862df80250c
+        env:
+          RUN_ID: ${{ cloudbees.run_id }}
+          JOB_ID: ${{ job.id }}
+          STEP_ID: ${{ step.internal.id }}
+        continue-on-error: true
+        run: /app/plugin-njsscan-scanner -mode single
+
+      - name: Gitleaks Scanner
+        if: ${{ steps.plan.outputs.gitleaks == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gitleaks-scanner:ff0ca194ecb33e2eb6c5ba18c9b9a6ca905c4af0
+        continue-on-error: true
+        env:
+          RUN_ID: ${{ cloudbees.run_id }}
+          JOB_ID: ${{ job.id }}
+          STEP_ID: ${{ step.internal.id }}
+        run: /app/plugin-gitleaks-scanner -mode single
+
+      - name: Sonar Scanner
+        if: ${{ steps.plan.outputs.sonar == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-sonarqube-scanner:d22c15088ff7668499d80bc4d204966d9ca7d2d9
+        env:
+          SONARQUBE_PROPS: ${{ steps.plan.outputs.sonar-props}}
+          RUN_ID: ${{ cloudbees.run_id }}
+          JOB_ID: ${{ job.id }}
+          STEP_ID: ${{ step.internal.id }}
+        continue-on-error: true
+        run: /app/plugin-sonarqube-scanner -mode single
+
+      - name: BlackDuck Scanner
+        if: ${{ steps.plan.outputs.blackduck == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/plugin-blackduck-sca:cb2cbcd89c3ec67d7617a16de8083918e5f31853
+        env:
+          BLACKDUCK_PROPS : ${{ steps.plan.outputs.blackduck-props}}
+          RUN_ID: ${{ cloudbees.run_id }}
+          JOB_ID: ${{ job.id }}
+          STEP_ID: ${{ step.internal.id }}
+        continue-on-error: true
+        run: /app/plugin-blackduck-scanner -mode single
+
+      - name: Checkov Scanner
+        if: ${{ steps.plan.outputs.checkov == 'true' }}
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-checkov-scanner:f1130860d6193c89a2fd6099d0fb41c4484869a9
+        env:
+          RUN_ID: ${{ cloudbees.run_id }}
+          JOB_ID: ${{ job.id }}
+          STEP_ID: ${{ step.internal.id }}
+        continue-on-error: true
+        run: /app/plugin-checkov -mode single
+
+      - name: Complete execution plan
+        uses: cloudbees-io/asset-chain-utils/end-chain@v1
+        id: process-outputs
