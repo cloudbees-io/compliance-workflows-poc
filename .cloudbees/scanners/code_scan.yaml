@@ -41,7 +41,7 @@ jobs:
 
       - name: Gerrit Inventory
         if: ${{ steps.plan.outputs.gerrit-inventory == 'true' }}
-        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gerrit:403a278a81d1c3fa83d253b2dc169867d656eafb
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gerrit:7090320e9370e9d510cc05d2c6256d93467aed30
         env:
           ACCOUNT_CREDENTIALS: ${{ steps.plan.outputs.account_credentials}}
           EXECUTION_ROLE: "MASTER"
@@ -49,7 +49,7 @@ jobs:
 
       - name: Gerrit Metadata
         if: ${{ steps.plan.outputs.gerrit-decorator == 'true' }}
-        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gerrit:403a278a81d1c3fa83d253b2dc169867d656eafb
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gerrit:7090320e9370e9d510cc05d2c6256d93467aed30
         env:
           ACCOUNT_CREDENTIALS: ${{ steps.plan.outputs.account_credentials}}
           EXECUTION_ROLE: "DECORATOR"
