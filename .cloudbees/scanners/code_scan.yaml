@@ -97,7 +97,7 @@ jobs:
 
       - name: Sonar Scanner
         if: ${{ steps.plan.outputs.sonar == 'true' }}
-        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-sonarqube-scanner:d22c15088ff7668499d80bc4d204966d9ca7d2d9
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-sonarqube-scanner:f086c531dce39825964ef24109d98bc97eb34887
         env:
           SONARQUBE_PROPS: ${{ steps.plan.outputs.sonar-props}}
           RUN_ID: ${{ cloudbees.run_id }}
