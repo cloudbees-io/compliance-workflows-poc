@@ -57,7 +57,7 @@ jobs:
 
       - name: SCC Scanner
         if: ${{ steps.plan.outputs.scc == 'true' }}
-        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-scc-scanner:6c844d4427ec4ed03fdee4aec65a671cf840d6a4
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-scc-scanner:9393ab805bb706c829c471e1dfc8e6ee73541253
         env:
           RUN_ID: ${{ cloudbees.run_id }}
           JOB_ID: ${{ job.id }}
@@ -97,7 +97,7 @@ jobs:
 
       - name: Sonar Scanner
         if: ${{ steps.plan.outputs.sonar == 'true' }}
-        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-sonarqube-scanner:f086c531dce39825964ef24109d98bc97eb34887
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-sonarqube-scanner:75d608d933dc16ac6c91272a9faec761cc67314c
         env:
           SONARQUBE_PROPS: ${{ steps.plan.outputs.sonar-props}}
           RUN_ID: ${{ cloudbees.run_id }}
